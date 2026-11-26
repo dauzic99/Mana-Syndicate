@@ -1,6 +1,6 @@
 # Mana-Syndicate — Rebuilt Systemic Technical Baseline (`.agents/specs/`)
 
-> **Authoritative Baseline:** This directory supersedes the legacy RPG Maker MV [prd.md](../../prd.md) (preserved as archive) and defines the rebuilt, mobile-first **Godot 4.x 2.5D** systemic specification for *The Mana Syndicate*.
+> **Authoritative Baseline:** This directory supersedes the legacy RPG Maker MV [prd.md](../../prd.md) (preserved as archive) and defines the rebuilt, mobile-first **Godot 4.x 2.5D** systemic specification for *The Mana Syndicate* (Cold Goldfish Audit resolved: [goldfish_review.md](../../docs/designs/systemic-baseline/goldfish_review.md); Production Checklists: [game-dev-production-roadmap.md](../vault/02-Workflows/game-dev-production-roadmap.md)).
 
 ## Locked Architectural & Design Pillars
 
@@ -24,4 +24,5 @@
 | [03-aetheric-loom-magic-system.md](./03-aetheric-loom-magic-system.md) | `SpellCircuit` graph model, front-loaded Realm unlocks, 2.5D/Timeline elemental verbs, unified Complexity/Channel/Stress math, IP Warfare |
 | [04-combat-timeline-and-doctrines.md](./04-combat-timeline-and-doctrines.md) | 4 Core Stats, Physical + Magic damage formulas, CTB Timeline & Collision Breaks, 2-tier roster, 3-axis Contractor schema, Lens Pulse |
 | [05-economy-exchange-and-waygates.md](./05-economy-exchange-and-waygates.md) | 3 Merged Hubs (Foundry, Exchange, Black Ledger), 0-cost Waygates capped by Aetheric Saturation & Heat, Turn-Based Auctions, 4 Nations |
-| [06-godot-25d-mobile-architecture.md](./06-godot-25d-mobile-architecture.md) | Godot 4.x mobile thermal/rendering spec, 16:9 dual-thumb UI map, typed `Resource`/`RefCounted` schemas, Autoloads, GUT test matrix |
+| [06-godot-25d-mobile-architecture.md](./06-godot-25d-mobile-architecture.md) | Godot 4.x mobile thermal/rendering spec, 16:9 dual-thumb UI map, typed `Resource`/`RefCounted` schemas, Autoloads, M1/M2/M3 GUT matrix |
+| [07-balance-tables-and-constants.md](./07-balance-tables-and-constants.md) | Canonical V1 numeric balance tables, `ElementMod` matrix, `PrimaryElement` map, and economy/combat constants |

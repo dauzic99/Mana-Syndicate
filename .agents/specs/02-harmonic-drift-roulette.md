@@ -2,7 +2,7 @@
 
 ## 1. Master Save Seed Architecture
 
-Every New Game spins a shareable **Master Seed** (e.g., `MS-7F4A-9921`). To guarantee deterministic replayability without UI actions polluting world generation, `HarmonicDriftSeed` splits the Master Seed into **5 isolated `RandomNumberGenerator` sub-streams**:
+Every New Game spins a shareable **Master Seed** (e.g., `MS-7F4A-9921`). To guarantee deterministic cross-platform replayability without UI actions polluting world generation, `HarmonicDriftSeed` splits the Master Seed into **6 isolated `RandomNumberGenerator` sub-streams** derived via `SHA-256(master_seed.strip_edges().to_upper() + ":" + stream_name)` (first 8 bytes little-endian `uint64`, never GDScript `hash()` or unsorted `Dictionary` iteration):
 
 | Sub-Stream | Deterministic Responsibility |
 | :--- | :--- |
@@ -11,6 +11,7 @@ Every New Game spins a shareable **Master Seed** (e.g., `MS-7F4A-9921`). To guar
 | `law_rng` | Ring 3: Active Global Physical Law Mutator + 2.5D skybox/Ley-Spire palette |
 | `brokerage_rng` | Initial 30-contractor Brokerage Pool (`PotentialGrade`, `Doctrine`, `AethericBody`, `OriginElement`) |
 | `leyline_rng` | Regional Waygate elemental hazards, contraband tables, and Auction lot order |
+| `combat_rng` | Deterministic combat crits, Fracture-Mutation rolls, and AI tie-breaks (persisted in `SaveRunState`) |
 
 ---
 
@@ -20,11 +21,11 @@ Rolling your Origin Element at New Game permanently mutates the **structural rul
 
 | Origin Element | Loom Architecture Name | Structural Rule Mutation |
 | :--- | :--- | :--- |
-| **Fire** | *Pyro-Catalyst* | Unlocks **Blood-Burn Loops**: pay `10% MaxHP` to add `+1` free Feedback Loop on any Fire circuit without increasing MP cost. |
-| **Water** | *Tidal Conduit* | Unlocks **Sympathetic Links**: spells hitting any *Soaked* unit echo at `50%` power to all other *Soaked* units on the same row. |
-| **Earth** | *Tectonic Architect* | All Earth Vessels leave persistent **2.5D Constructs** (Stone Pillars / Crystal Prisms) on the arena for `3` turns to block melee or refract spells. |
-| **Wind** | *Chrono-Vector* | Every Wind circuit may target **Row Position** OR **CTB Timeline Position** (`±25` Action Value push/pull). |
-| **Aether** | *Blank Sovereign* | Starts with **`+2` Free Logic Gate Slots** (`IF`, `COPY`, `INVERT`) and `0` base element bias, enabling multi-element metamagic from Act I. |
+| **Fire** | *Pyro-Catalyst* | Unlocks **Blood-Burn Loops**: pay `10% MaxHP` (blocked if `HP <= cost`) to add `+1` free Feedback Loop (cap `+1` per circuit) without increasing MP cost. |
+| **Water** | *Tidal Conduit* | Unlocks **Sympathetic Links**: spells hitting any *Soaked* unit echo at `50%` power to all other *Soaked* units on the same row (recursion `depth <= 1`). |
+| **Earth** | *Tectonic Architect* | Non-`Pillar` Earth Vessels also spawn a mini **2.5D Construct** (`15% MaxHP`, `3` turns, max `2` constructs/side) and enable Prism refraction. |
+| **Wind** | *Chrono-Vector* | Every Wind circuit toggles **Row** OR **CTB Timeline** targeting (`±25 AV` push/pull) **at Loom craft time** (keeps combat strictly `2`-tap). |
+| **Aether** | *Blank Sovereign* | Starts with **`+2` Free Logic Gate Slots** (`condition_gate`, `echo`, `shift`) and `0` base element bias, enabling multi-element metamagic from Act I. |
 
 ---
 
@@ -36,7 +37,7 @@ Every save seed assigns **two opposing macro-economic elemental states** across 
    - Hoarded by the Syndicate Clearinghouse for this save.
    - Catalyst & node purchase cost: **`+200%`**.
    - **Patented** spells of the Bubble Element pay **`3.0×` Quarterly/Act Royalties**.
-   - Regional Bubble Crash events can be shorted on *The Exchange* for massive capital spikes.
+   - Regional Bubble Crash events (`OPEN_SOURCE_LEAK`) slash prices so players can stockpile cheap Bubble catalysts (short-selling is excluded in V1 to prevent insider-trading exploits).
 2. **The Heresy Element (1 of 5):**
    - Outlawed by Syndicate Censors for this save; **removed from all legal shops and public Patenting**.
    - Obtainable only via **Black Ledger heists**, Waygate contraband nodes, and rogue Brokerage recruits.
@@ -57,10 +58,10 @@ Each save locks **1 Global Physical Law** that applies symmetrically to **both t
 | `LAW_05` | **Volatile Resonance** | Overclocked (`101–150%` Stress) spells gain `+15%` extra power; Break vulnerability rises from `2.0×` to `2.5×`. | Cracked magenta sky-arcs |
 | `LAW_06` | **Glass Economy** | All units take `+25%` damage; Clearinghouse Auction starting bids drop by `35%`. | Crisp pale-ivory glare |
 | `LAW_07` | **Echoing Leylines** | First spell cast each battle by any unit automatically gains a free `50%` power `Echo`. | Twin-ring halo spires |
-| `LAW_08` | **Frozen Ledger** | Commodity prices freeze for 2 Episodes at a time, then swing `±150%`; `Ice` and `Water` gain `+1` Chill stack. | Frost-blue aurora |
-| `LAW_09` | **Blood Tariff** | All spells cost `20%` less MP but consume `5%` MaxHP on cast; `Leech` effectiveness `+50%`. | Rust-red smog |
-| `LAW_10` | **Prism Refraction** | `Ward` and `Pillar` constructs reflect `30%` of single-target `Bolt` spells to an adjacent enemy. | Iridescent shard dust |
-| `LAW_11` | **Overdraft Cascade** | Units may cast spells at `0 MP` by converting the deficit into `+ActionValue` Timeline delay (`1 MP = +2 AV`). | Dimmer tungsten glow |
+| `LAW_08` | **Frozen Ledger** | Commodity prices freeze for 2 Episodes, then multiply `0.4×` to `2.5×` (hard floor `>= 10%` base); `Ice` and `Water` add `+15 AV` Freeze / `+1` *Soaked* turn. | Frost-blue aurora |
+| `LAW_09` | **Blood Tariff** | All spells cost `20%` less MP (`>= 1` MP floor) but consume `5%` MaxHP on cast (blocked if `HP <= cost`); `Leech` effectiveness `+50%`. | Rust-red smog |
+| `LAW_10` | **Prism Refraction** | `Ward` and `Pillar` constructs reflect `30%` of single-target `Bolt` spells to an adjacent enemy (`depth <= 1`). | Iridescent shard dust |
+| `LAW_11` | **Overdraft Cascade** | Units may cast at `0 MP` (capped `<= MaxMP` deficit, resolved after `MARTYR` HP-cast) by converting deficit into a breakable `+2 AV / MP` **pre-cast** Channel delay. | Dimmer tungsten glow |
 | `LAW_12` | **Silent Meridian** | Basic attacks deal `+35%` damage; `Channeling` spells cannot be interrupted by non-`Void` / non-`Spear` hits. | Ash-grey overcast |
 
 ---

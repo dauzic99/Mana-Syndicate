@@ -1,6 +1,6 @@
 # Mana-Syndicate — Agent Entry Manual
 
-Read [GOLDEN_STANDARD.md](./GOLDEN_STANDARD.md), [.agents/vault/INDEX.md](./.agents/vault/INDEX.md), [.agents/memory/GRAPH_SUMMARY.md](./.agents/memory/GRAPH_SUMMARY.md), and [docs/designs/README.md](./docs/designs/README.md) before modifying code or designing a system.
+Read [GOLDEN_STANDARD.md](./GOLDEN_STANDARD.md), [.agents/vault/INDEX.md](./.agents/vault/INDEX.md), [Production Roadmap & Checklists](./.agents/vault/02-Workflows/game-dev-production-roadmap.md), [.agents/memory/GRAPH_SUMMARY.md](./.agents/memory/GRAPH_SUMMARY.md), and [docs/designs/README.md](./docs/designs/README.md) before modifying code or designing a system.
 
 ## 1. Project Identity & Stack
 - **Project**: `Mana-Syndicate` (Godot 4.x 2.5D)

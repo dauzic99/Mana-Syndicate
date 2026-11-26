@@ -9,21 +9,34 @@ stateDiagram-v2
     [*] --> BOOT
     BOOT --> TITLE : Load Settings & Save Index
     TITLE --> DRIFT_ROULETTE : New Run (Generate/Enter Master Seed)
-    TITLE --> FOUNDRY_HUB : Continue (Atomic Resume)
+    TITLE --> RESUME_ROUTER : Continue (Atomic Resume)
+    RESUME_ROUTER --> FOUNDRY_HUB : Saved in Hub
+    RESUME_ROUTER --> DIORAMA_RAID : Saved in Raid Room
+    RESUME_ROUTER --> TIMELINE_COMBAT : Saved Mid-Turn
+    RESUME_ROUTER --> CLEARINGHOUSE_AUCTION : Saved in Auction Round
+    RESUME_ROUTER --> IP_DISPOSITION : Saved at IP Choice
     DRIFT_ROULETTE --> FOUNDRY_HUB : Lock 3-Ring Cosmology (Act I Start)
 
     FOUNDRY_HUB --> DIORAMA_RAID : Deploy to Regional Waygate
+    FOUNDRY_HUB --> BLACK_LEDGER_HEIST : Launch Black Ledger Heist
     FOUNDRY_HUB --> CLEARINGHOUSE_AUCTION : Trigger End-of-Act Auction
     DIORAMA_RAID --> TIMELINE_COMBAT : Encounter / Liquidator Ambush
-    TIMELINE_COMBAT --> DIORAMA_RAID : Victory / Tactical Retreat
+    BLACK_LEDGER_HEIST --> TIMELINE_COMBAT : Security Engagement
+    TIMELINE_COMBAT --> DIORAMA_RAID : Victory / Tactical Retreat (Non-Boss, Non-Liquidator)
     TIMELINE_COMBAT --> FOUNDRY_HUB : Examiner KO -> Bailout (Standard)
     TIMELINE_COMBAT --> GAME_OVER : Examiner KO (Hardcore Audit)
 
     DIORAMA_RAID --> FOUNDRY_HUB : 0-Cost Ley-Gate Extraction
-    CLEARINGHOUSE_AUCTION --> IP_DISPOSITION : Auction & Boss Resolved
-    IP_DISPOSITION --> ACT_SETTLEMENT : Patent / Leak / Black-Book Locked
+    DIORAMA_RAID --> EPISODE_SETTLEMENT : Episode Beat Cleared
+    CLEARINGHOUSE_AUCTION --> TIMELINE_COMBAT : Act Patent Boss
+    TIMELINE_COMBAT --> IP_DISPOSITION : Act Boss / Heist Climax Resolved
+    IP_DISPOSITION --> EPISODE_SETTLEMENT : Ep < MaxEp (Standard Beat)
+    IP_DISPOSITION --> ACT_SETTLEMENT : Final Act Episode Resolved
+    EPISODE_SETTLEMENT --> FOUNDRY_HUB : Advance Episode (Decay Heat / Reset Saturation)
     ACT_SETTLEMENT --> FOUNDRY_HUB : Advance to Next Continental Act
     ACT_SETTLEMENT --> EPILOGUE : Act V World-Ledger Climax Resolved
+    GAME_OVER --> TITLE : Archive Seed & Return
+    EPILOGUE --> TITLE : New Seed+ / Return
 ```
 
 ---
@@ -37,7 +50,7 @@ The 1,080-day school calendar is eliminated. A full campaign spans **5 Episodic 
 | **Act I** | **The Brass Meridian** *(Free-Port Hub)* | Origin Loom onboarding, 4-node Spell Weaving unlocked in Episode 1, Brokerage hiring, first Patent/Leak choice | Turn-Based Clearinghouse Auction + **Audit Bailiff** |
 | **Act II** | **The Ironclad Forges** *(Weaponized IP)* | Factory spell-leases, Armor-Pierce & Earth Pillar terrain warfare, 6-node Loom & Elemental Fusions | Forge Union Heist + **Ironclad Siege Sovereign** |
 | **Act III** | **The Canopy Sanatoriums** *(Subscription Bio-Magic)* | Foreclosure Rot crisis, moral clash between profiting on cure scarcity vs. open-source Leaks, Water/Poison chains | Quarantine Raid + **Chief Actuary of Bio-Tariffs** |
-| **Act IV** | **The Glass-Dune Freeholds & Basalt Vaults** *(Mirage & Keystone)* | 9-node Loom, Splitters, Feedback Loops, Mythic Elements, Black-Ledger Catalyst smuggling, Vault security | Dual Heist + **Sovereign Vault Guarantor** |
+| **Act IV** | **The Glass-Dune Freeholds & Basalt Vaults** *(Mirage & Keystone)* | 9-node Loom, Feedback Loops, Mythic Elements, Trojan Kill-Switches, Black-Ledger Catalyst smuggling, Vault security | Dual Heist + **Sovereign Vault Guarantor** |
 | **Act V** | **The World-Ledger Core** *(Harmonic Convergence)* | All 4 Nations react to your Patent/Leak ledger; bosses deploy counter-builds to your most-used **Patented** spells | **The Central Compiler** + 7 Shards of *Formula Zero* Finale |
 
 ---
@@ -47,6 +60,7 @@ The 1,080-day school calendar is eliminated. A full campaign spans **5 Episodic 
 Each Act consists of **4–5 Episodes**. Every Episode breaks into three self-contained mobile beats:
 
 1. **Beat 1 — Market Pulse & Foundry Prep (2–4 min):**
+   - **Progressive Act I Tab Unlock** (prevents onboarding overload): `Ep 1: Loom + Raid`, `Ep 2: Brokerage + Sub-Contracts`, `Ep 3+: Exchange + Black Ledger`.
    - Inspect the **Continental Ticker** (driven by the save's *Harmonic Drift* + prior Patent/Leak ripples).
    - Craft, overclock, or imprint 1 `SpellCircuit` in the **Aetheric Loom** and test-fire on the live 2.5D mannequin.
    - Assign benched Brokerage contractors to **Async Sub-Contracts** (resolved on Beat completion).
@@ -64,12 +78,15 @@ Each Act consists of **4–5 Episodes**. Every Episode breaks into three self-co
 
 Android and iOS aggressively terminate backgrounded apps. **Manual-only saving is forbidden.**
 
-- **Atomic Checkpoint Triggers:** Write `SaveRunState` atomically (temp file + rename + `.bak` rotation) immediately after:
-  1. Every completed **turn** in `TIMELINE_COMBAT` (preserving exact Timeline Action Values, HP/MP, Stress, and active 2.5D constructs).
-  2. Every **room transition**, chest/node interaction, or Ley-Gate extraction in `DIORAMA_RAID`.
-  3. Every **spell commit/imprint** in the Aetheric Loom.
-  4. Every **market trade**, **sub-contract dispatch**, or **auction round bid** in `FOUNDRY_HUB` / `CLEARINGHOUSE_AUCTION`.
-- **Resume Invariant:** Relaunching after an OS kill drops the player directly back into the exact turn, room, or auction round with zero lost progress.
+- **Atomic Checkpoint Triggers:** Commit `SaveRunState` (versioned JSON via `WorkerThreadPool` temp file + `.bak` rotation + rename, plus synchronous flush on `NOTIFICATION_APPLICATION_PAUSED`) **before** playing animations:
+  1. Every resolved **turn** in `TIMELINE_COMBAT` (committed **before** combat animations play, preserving exact `combat_rng`, Timeline Action Values, HP/MP, and active 2.5D constructs).
+  2. Immediately upon **Fracture-Mutation** trigger (before opening the player naming modal).
+  3. Every **room transition**, chest/node interaction, or Ley-Gate extraction in `DIORAMA_RAID`.
+  4. Every **spell commit/imprint** in the Aetheric Loom, and every **market trade**, **sub-contract dispatch**, or **auction round bid**.
+- **Anti-Cheese & Roster Floor Invariants:**
+  - **Tactical Retreat** is forbidden during **Act Bosses** and **Audit Choir Liquidator Ambushes**.
+  - Solo Examiner deployment is always permitted; if active non-Examiner squad `< 2`, Brokerage guarantees `>= 2` `0G`-upfront recruits.
+- **Resume Invariant:** Relaunching after an OS kill routes through `RESUME_ROUTER` directly back into the exact turn, room, or auction round with zero lost progress.
 
 ---
 
