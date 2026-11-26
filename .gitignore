@@ -1,0 +1,26 @@
+# Godot 4.x
+.godot/
+export_presets.cfg
+*.translation
+
+# Godot 4+ Mono / C# (if ever enabled)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Builds & Exports
+android/
+builds/
+exports/
+
+# IMPORTANT: Do NOT ignore *.uid (Godot 4.4+ resource UID tracking) or *.import (shared asset import settings).
+
+# Isolated test suite (curated global standard: keep tests/ isolated & gitignored; remove if tracking GUT suites in git)
+tests/
+
+# OS & Environment
+.DS_Store
+.env
+.env.local
+*.tmp
+*.log

@@ -1,0 +1,40 @@
+# Default: normalize all text files to LF across macOS, Windows, and Linux
+* text=auto eol=lf
+
+# Godot 4.x text formats & scripts
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.cfg text eol=lf
+*.import text eol=lf
+*.uid text eol=lf
+
+# Shell, Python, Docs & Configs
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.svg text eol=lf
+*.gltf text eol=lf
+
+# Binary Game Assets (never touch line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.glb binary
+*.fbx binary
+*.blend binary
+*.ttf binary
+*.otf binary
+*.woff2 binary
+*.pck binary
+*.zip binary
